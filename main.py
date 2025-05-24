@@ -1,40 +1,21 @@
-from fastapi import FastAPI, Request
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
-import os
+from telegram import Bot
 import asyncio
+import os
 
-# 봇 토큰 및 Webhook URL 환경변수에서 불러오기
-TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+TOKEN = os.getenv("7622493232:AAFtDWDvx8giDqSOmuH4K6QB9m5K3ljCzRs")  # Render 환경변수에서 토큰 불러오기
+CHAT_ID = os.getenv("4831865253")  # 메시지를 보낼 그룹방 ID
 
-# FastAPI 앱 생성
-app = FastAPI()
+bot = Bot(token=TOKEN)
 
-# Telegram Bot Application 초기화
-telegram_app = Application.builder().token(TOKEN).build()
+async def send_periodic_message():
+    while True:
+        try:
+            await bot.send_message(chat_id=CHAT_ID, text="🎯 Welcome! ZERO ROOM에 오신것을 환영합니다!")
+            print("메시지 전송됨")
+        except Exception as e:
+            print(f"오류 발생: {e}")
+        await asyncio.sleep(180)  # 3분 = 180초
 
-# /start 명령 처리 함수
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🎯 Welcome ZERO ROOM에 오신 걸 환영합니다!")
-
-# 핸들러 등록
-telegram_app.add_handler(CommandHandler("start", start))
-
-# 웹훅 라우트 정의
-@app.post("/webhook")
-async def webhook(request: Request):
-    data = await request.json()
-    update = Update.de_json(data, telegram_app.bot)
-    await telegram_app.process_update(update)
-    return {"ok": True}
-
-# 서버 시작 시 Webhook 등록
-@app.on_event("startup")
-async def startup_event():
-    await telegram_app.bot.set_webhook(url=WEBHOOK_URL)
-
-# 종료 시 Webhook 제거 (선택사항)
-@app.on_event("shutdown")
-async def shutdown_event():
-    await telegram_app.bot.delete_webhook()
+if __name__ == "__main__":
+    print("봇 자동 메시지 시작됨...")
+    asyncio.run(send_periodic_message())
